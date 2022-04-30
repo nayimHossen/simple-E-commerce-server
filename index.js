@@ -18,11 +18,26 @@ async function run() {
         const productCollection = client.db('e-commerce').collection('product');
 
         app.get('/products', async (req, res) => {
+            const page = parseInt(req.query.page);
+            const size = parseInt(req.query.size);
+
             const query = {};
             const cursor = productCollection.find(query);
-            const products = await cursor.toArray();
+            let products;
+            if (page || size) {
+                products = await cursor.skip(page * size).limit(size).toArray();
+            }
+            else {
+                products = await cursor.toArray();
+            }
             res.send(products);
-        })
+        });
+
+        //how many products have on server
+        app.get('/productsCount', async (req, res) => {
+            const count = await productCollection.estimatedDocumentCount();
+            res.send({ count });
+        });
     }
     finally {
 
